@@ -30,7 +30,7 @@ def load_piece_images():
         "black king": pygame.image.load(path+"black king.png"),
     }
     for key in piece_images:
-        piece_images[key] = pygame.transform.scale(piece_images[key], (Config.TILE_SIZE, Config.TILE_SIZE))
+        piece_images[key] = pygame.transform.smoothscale(piece_images[key], (Config.TILE_SIZE, Config.TILE_SIZE))
     return piece_images
 
 
