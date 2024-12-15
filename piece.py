@@ -16,7 +16,7 @@ class Piece:
         y = board_offset + row * Config.TILE_SIZE + (Config.TILE_SIZE - Config.PIECE_SIZE) // 2
         screen.blit(self.image, (x, y))
 
-    def valid_moves(self, board):
+    def valid_moves(self, board, color):
         moves = []
         directions = {
             "pawn": [(1, 0), (2, 0), (1, -1), (1, 1)] if "white" in self.piece_type else [(-1, 0), (-2, 0), (-1, -1),
@@ -42,10 +42,21 @@ class Piece:
                 moves.append((new_row, new_col))
                 if "pawn" in self.piece_type or "king" in self.piece_type or "knight" in self.piece_type:
                     break
-        return moves
+
+        valid_moves = []
+        for move in moves:
+            temp_board = board.pieces.copy()
+            temp_piece = Piece(self.piece_type.split()[1], self.piece_type.split()[0], move, self.image, self.screen)
+            temp_board.remove(self)
+            temp_board.append(temp_piece)
+            if not board.is_in_check(temp_board, color):
+                valid_moves.append(move)
+
+        return valid_moves
 
     def update(self, position):
-        print(f"Updating {self.piece_type} from {self.position} to {position}")
+        if position[0]>=8 or position[0]<0 or position[1]>=8 or position[1]<0:
+            return False
         self.position = position
         self.draw(self.screen)
 

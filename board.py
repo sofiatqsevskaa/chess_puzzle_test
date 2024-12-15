@@ -33,3 +33,23 @@ class Board:
                                 self.offset + self.size + Config.GAP // 4))
 
 
+    def is_in_check(self, color):
+        king = None
+        for piece in self.pieces:
+            if piece.piece_type.split()[0] == color and piece.piece_type.split()[1] == "king":
+                king = piece
+                break
+
+        if not king:
+            return False
+
+        king_position = king.position
+        opponent_color = "black" if color == "white" else "white"
+
+        for piece in self.pieces:
+            if piece.piece_type.split()[0] == opponent_color:
+                moves = piece.valid_moves(self)
+                if king_position in moves:
+                    return True
+
+        return False
