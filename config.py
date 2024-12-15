@@ -10,3 +10,4 @@ class Config:
     ASSETS_FOLDER = "assets"
 
 
+

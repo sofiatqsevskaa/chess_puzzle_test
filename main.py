@@ -1,6 +1,6 @@
 import pygame
 from config import Config
-from board import screen, Board as Chess_Board
+from board import Board as Chess_Board
 from fen_to_positions import fen_to_dict
 from piece import Piece
 
@@ -34,21 +34,24 @@ def load_piece_images():
     return piece_images
 
 
-def create_pieces(puzzle_positions, piece_images):
+def create_pieces(puzzle_positions, piece_images, screen):
     pieces = []
     for position, piece_info in puzzle_positions.items():
         color, piece_type = piece_info.split()
         x, y = position
         image = piece_images.get(f"{color} {piece_type}")
-        piece = Piece(piece_type, color, (x, y), image)
+        piece = Piece(piece_type, color, (x, y), image, screen)
         pieces.append(piece)
     return pieces
 
 
-def draw_board_and_pieces(board, pieces):
+def draw_board(board):
         board.draw()
-        for piece in pieces:
-            piece.draw(screen)
+
+def draw_pieces(pieces, screen):
+    for piece in pieces:
+        piece.draw(screen)
+
 
 
 def main():
@@ -56,21 +59,30 @@ def main():
     fen = "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2"
     fen1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
-    #CHANGE FEN
-    puzzle_positions = get_puzzle_positions(fen1)
+    #CHANGE FEN7х
+    puzzle_positions, current_player = get_puzzle_positions(fen)
 
+    screen = pygame.display.set_mode((Config.WINDOW_SIZE + Config.GAP * 2 + 600, Config.WINDOW_SIZE + Config.GAP * 2))
+    pygame.display.set_caption("Chess Puzzle Solver")
     piece_images = load_piece_images()
-    board = Chess_Board()
-    pieces = create_pieces(puzzle_positions, piece_images)
+    pieces = create_pieces(puzzle_positions, piece_images, screen)
+    board = Chess_Board(screen, pieces)
 
-    draw_board_and_pieces(board, pieces)
+    draw_board(board)
+    draw_pieces(pieces, screen)
     pygame.display.flip()
+
 
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+        screen.fill((255, 255, 255))
+        draw_board(board)
+        draw_pieces(pieces, screen)
+        pygame.display.flip()
 
     pygame.quit()
 

@@ -1,23 +1,24 @@
 import pygame
+from pygame import BLEND_ADD
+
 from config import *
 
 
-screen = pygame.display.set_mode((Config.WINDOW_SIZE + Config.GAP * 2, Config.WINDOW_SIZE + Config.GAP * 2))
-
-
 class Board:
-    def __init__(self):
+    def __init__(self, screen, pieces):
         self.size = Config.WINDOW_SIZE
         self.tile_size = Config.TILE_SIZE
         self.offset = Config.GAP
         self.font = pygame.font.SysFont('Verdana', 16)
+        self.screen = screen
+        self.pieces = pieces
 
     def draw(self):
-        screen.fill((255, 255, 255))
+        self.screen.fill((255, 255, 255))
         for row in range(8):
             for col in range(8):
                 color = Config.YELLOW if (row + col) % 2 == 0 else Config.BROWN
-                pygame.draw.rect(screen, color,
+                pygame.draw.rect(self.screen, color,
                                  (self.offset + col * self.tile_size, self.offset + row * self.tile_size,
                                   self.tile_size, self.tile_size))
             self.draw_coordinates(row)
@@ -26,9 +27,9 @@ class Board:
         rank_text = self.font.render(str(8 - row), False, Config.BLACK)
         file_text = self.font.render(chr(ord('a') + row), False, Config.BLACK)
 
-        screen.blit(rank_text,
+        self.screen.blit(rank_text,
                     (5, self.offset + row * self.tile_size + self.tile_size // 2 - rank_text.get_height() // 2))
-        screen.blit(file_text, (self.offset + row * self.tile_size + self.tile_size // 2 - file_text.get_width() // 2,
+        self.screen.blit(file_text, (self.offset + row * self.tile_size + self.tile_size // 2 - file_text.get_width() // 2,
                                 self.offset + self.size + Config.GAP // 4))
 
 

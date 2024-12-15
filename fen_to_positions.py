@@ -19,7 +19,12 @@ def fen_to_dict(fen):
         piece_color = "white" if piece.color else "black"
         piece_name = piece_type_map[piece.piece_type]
         positions[(row, col)] = f"{piece_color} {piece_name}"
-    return positions
+
+    current_player = "white" if fen.split()[1] == "w" else "black"
+    return positions, current_player
+
+
+
 
 puzzle_positions = fen_to_dict(fen)
 print(puzzle_positions)
