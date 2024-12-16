@@ -5,13 +5,14 @@ from config import *
 
 
 class Board:
-    def __init__(self, screen, pieces):
+    def __init__(self, screen, pieces, current_player):
         self.size = Config.WINDOW_SIZE
         self.tile_size = Config.TILE_SIZE
         self.offset = Config.GAP
         self.font = pygame.font.SysFont('Verdana', 16)
         self.screen = screen
         self.pieces = pieces
+        self.current_player = current_player
 
     def draw(self):
         self.screen.fill((255, 255, 255))
@@ -32,6 +33,18 @@ class Board:
         self.screen.blit(file_text, (self.offset + row * self.tile_size + self.tile_size // 2 - file_text.get_width() // 2,
                                 self.offset + self.size + Config.GAP // 4))
 
+    def get_board_state(self):
+        board_state = {
+            "pieces": {},
+            "current_player": self.current_player
+        }
+
+        for piece in self.pieces:
+            position = piece.position
+            piece_info = piece.piece_type
+            board_state["pieces"][position] = piece_info
+
+        return board_state
 
     def is_in_check(self, color):
         king = None

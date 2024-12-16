@@ -49,6 +49,8 @@ def draw_pieces(pieces, screen):
     for piece in pieces:
         piece.draw(screen)
 
+import pygame
+
 def draw_buttons(screen):
     font = pygame.font.SysFont('Verdana', 20)
     button_x = Config.WINDOW_SIZE + Config.GAP * 2 + 50
@@ -67,12 +69,20 @@ def draw_buttons(screen):
         (alpha_beta_button, "Alpha-Beta")
     ]
 
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+
     for button, text in buttons:
-        pygame.draw.rect(screen, (200, 200, 200), button)
+        if button.collidepoint(mouse_x, mouse_y):
+            button_color = (150, 150, 150)
+        else:
+            button_color = (200, 200, 200)
+
+        pygame.draw.rect(screen, button_color, button)
         button_text = font.render(text, True, (0, 0, 0))
         screen.blit(button_text, (button.x + 25, button.y + 15))
 
     return {text: button for button, text in buttons}
+
 
 def main():
     initialize_game()
@@ -82,7 +92,18 @@ def main():
     screen = pygame.display.set_mode((Config.WINDOW_SIZE + Config.GAP * 2 + 300, Config.WINDOW_SIZE + Config.GAP * 2))
     piece_images = load_piece_images()
     pieces = create_pieces(puzzle_positions, piece_images, screen)
-    board = Chess_Board(screen, pieces)
+    board = Chess_Board(screen, pieces, current_player)
+
+    board_state = board.get_board_state()
+    solver = PuzzleSolver(board_state)
+
+    solver_methods = {
+        "DFS": solver.dfs,
+        "BFS": solver.bfs,
+        "A*": solver.a_star,
+        "Minimax": lambda: solver.minimax(depth=3),  # Example depth value
+        "Alpha-Beta": lambda: solver.minimax_with_pruning(depth=3),  # Example depth value
+    }
 
     draw_board(board)
     draw_pieces(pieces, screen)
@@ -97,7 +118,8 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 for algorithm, button in buttons.items():
                     if button.collidepoint(event.pos):
-                        print(f"{algorithm} button clicked")
+                        result = solver_methods[algorithm]()
+                        print(f"{algorithm} result: {result}")
 
         screen.fill((255, 255, 255))
         draw_board(board)
@@ -106,6 +128,7 @@ def main():
         pygame.display.flip()
 
     pygame.quit()
+
 
 if __name__ == "__main__":
     main()
