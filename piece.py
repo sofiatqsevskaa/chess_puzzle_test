@@ -54,11 +54,21 @@ class Piece:
 
         return valid_moves
 
-    def update(self, position):
-        if position[0]>=8 or position[0]<0 or position[1]>=8 or position[1]<0:
+    def update(self, position, board):
+        if position[0] >= 8 or position[0] < 0 or position[1] >= 8 or position[1] < 0:
             return False
+
+        target_piece = next((p for p in board.pieces if p.position == position), None)
+
+        if target_piece:
+            if target_piece.piece_type.split()[0] != self.piece_type.split()[0]:
+                board.pieces.remove(target_piece)
+            else:
+                return False
+
         self.position = position
         self.draw(self.screen)
+        return True
 
     def __repr__(self):
         return f"Piece ({self.piece_type}, {self.position})"
