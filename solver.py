@@ -1,3 +1,6 @@
+import chess
+
+
 class PuzzleSolver:
     def __init__(self, board_state):
         self.board_state = board_state
@@ -7,9 +10,6 @@ class PuzzleSolver:
 
     def bfs(self):
         return "BFS Result"
-
-    def a_star(self):
-        return "A* Result"
 
     def minimax(self, depth):
         return "Minimax Result"

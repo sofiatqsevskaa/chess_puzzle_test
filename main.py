@@ -5,32 +5,37 @@ from fen_to_positions import fen_to_dict
 from piece import Piece
 from solver import PuzzleSolver
 
+
 def initialize_game():
     pygame.init()
     pygame.display.set_caption("Chess Board")
 
+
 def get_puzzle_positions(fen):
     return fen_to_dict(fen)
 
+
 def load_piece_images():
-    path = "assets/"
+    path = "chess_puzzle_test/assets/"
     piece_images = {
-        "white pawn": pygame.image.load(path + "white pawn.png"),
-        "black pawn": pygame.image.load(path + "black pawn.png"),
-        "white rook": pygame.image.load(path + "white rook.png"),
-        "black rook": pygame.image.load(path + "black rook.png"),
-        "white knight": pygame.image.load(path + "white knight.png"),
-        "black knight": pygame.image.load(path + "black knight.png"),
-        "white bishop": pygame.image.load(path + "white bishop.png"),
-        "black bishop": pygame.image.load(path + "black bishop.png"),
-        "white queen": pygame.image.load(path + "white queen.png"),
-        "black queen": pygame.image.load(path + "black queen.png"),
-        "white king": pygame.image.load(path + "white king.png"),
-        "black king": pygame.image.load(path + "black king.png"),
+        "white pawn": pygame.image.load(path + "white_pawn.png"),
+        "black pawn": pygame.image.load(path + "black_pawn.png"),
+        "white rook": pygame.image.load(path + "white_rook.png"),
+        "black rook": pygame.image.load(path + "black_rook.png"),
+        "white knight": pygame.image.load(path + "white_knight.png"),
+        "black knight": pygame.image.load(path + "black_knight.png"),
+        "white bishop": pygame.image.load(path + "white_bishop.png"),
+        "black bishop": pygame.image.load(path + "black_bishop.png"),
+        "white queen": pygame.image.load(path + "white_queen.png"),
+        "black queen": pygame.image.load(path + "black_queen.png"),
+        "white king": pygame.image.load(path + "white_king.png"),
+        "black king": pygame.image.load(path + "black_king.png"),
     }
     for key in piece_images:
-        piece_images[key] = pygame.transform.smoothscale(piece_images[key], (Config.TILE_SIZE, Config.TILE_SIZE))
+        piece_images[key] = pygame.transform.smoothscale(
+            piece_images[key], (Config.TILE_SIZE, Config.TILE_SIZE))
     return piece_images
+
 
 def create_pieces(puzzle_positions, piece_images, screen):
     pieces = []
@@ -42,14 +47,15 @@ def create_pieces(puzzle_positions, piece_images, screen):
         pieces.append(piece)
     return pieces
 
+
 def draw_board(board):
     board.draw()
+
 
 def draw_pieces(pieces, screen):
     for piece in pieces:
         piece.draw(screen)
 
-import pygame
 
 def draw_buttons(screen):
     font = pygame.font.SysFont('Verdana', 20)
@@ -84,12 +90,22 @@ def draw_buttons(screen):
     return {text: button for button, text in buttons}
 
 
+def display_moves(screen, moves):
+    font = pygame.font.SysFont('Verdana', 20)
+    pos_x, pos_y, offset_y, offset_x = 570, 100, 60, 70
+    for i, move in enumerate(moves):
+        move_text = f"{move}#" if i == len(moves) - 1 else str(move)
+        screen.blit(font.render(move_text, True, (0, 0, 0)),
+                    (pos_x + (i % 2) * offset_x, pos_y + (i // 2) * offset_y))
+
+
 def main():
     initialize_game()
     fen = "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2"
     puzzle_positions, current_player = get_puzzle_positions(fen)
 
-    screen = pygame.display.set_mode((Config.WINDOW_SIZE + Config.GAP * 2 + 300, Config.WINDOW_SIZE + Config.GAP * 2))
+    screen = pygame.display.set_mode(
+        (Config.WINDOW_SIZE + Config.GAP * 2 + 300, Config.WINDOW_SIZE + Config.GAP * 2))
     piece_images = load_piece_images()
     pieces = create_pieces(puzzle_positions, piece_images, screen)
     board = Chess_Board(screen, pieces, current_player)
@@ -100,9 +116,8 @@ def main():
     solver_methods = {
         "DFS": solver.dfs,
         "BFS": solver.bfs,
-        "A*": solver.a_star,
-        "Minimax": lambda: solver.minimax(depth=3),  # Example depth value
-        "Alpha-Beta": lambda: solver.minimax_with_pruning(depth=3),  # Example depth value
+        "Minimax": lambda: solver.minimax(depth=3),
+        "Alpha-Beta": lambda: solver.minimax_with_pruning(depth=3),
     }
 
     draw_board(board)
@@ -110,6 +125,7 @@ def main():
     buttons = draw_buttons(screen)
     pygame.display.flip()
 
+    moves = []
     running = True
     while running:
         for event in pygame.event.get():
@@ -118,13 +134,13 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 for algorithm, button in buttons.items():
                     if button.collidepoint(event.pos):
-                        result = solver_methods[algorithm]()
-                        print(f"{algorithm} result: {result}")
+                        moves = solver_methods[algorithm]()
 
         screen.fill((255, 255, 255))
         draw_board(board)
         draw_pieces(pieces, screen)
         buttons = draw_buttons(screen)
+        display_moves(screen, moves)
         pygame.display.flip()
 
     pygame.quit()
