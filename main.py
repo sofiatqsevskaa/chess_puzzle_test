@@ -120,7 +120,7 @@ def main():
     initialize_game()
 
     fen, moves_until_mate = parse_fen_with_mate(
-        "chess_puzzle_test/position2.txt")
+        "chess_puzzle_test/position5.txt")
 
     puzzle_positions, current_player = get_puzzle_positions(
         fen)

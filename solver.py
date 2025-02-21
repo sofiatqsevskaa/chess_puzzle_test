@@ -167,15 +167,51 @@ def bfs(board, max_depth, player, sequence, moves):
         return (sequence, board)
 
 
-visited_positions = set()
+def check_game_over_minimax(board, player):
+    possible_moves = board.generate_possible_moves(player)
+
+    original_position_fen = board.generate_fen().split(" ")[0]
+
+    legal_moves_uci = [move.uci() for move in chess.Board(
+        original_position_fen + " " + player[0]).legal_moves]
+
+    possible_moves_uci = [convert_to_uci(piece, target_position)
+                          for piece, target_position in possible_moves
+                          if isinstance(convert_to_uci(piece, target_position), str)]
+
+    possible_moves = board.check_for_differences(
+        legal_moves_uci, possible_moves_uci)
+    possible_moves = [convert_from_uci(
+        board, move_uci) for move_uci in possible_moves]
+    possible_moves = [move for move in possible_moves if move is not None]
+
+    opp = board.opponent(player)
+
+    # print(
+    #     f"opp {opp} king in check {board.king_in_check} possible moves {possible_moves}")
+
+    for move in possible_moves:
+        if opp == move[0].piece_type[0]:
+            possible_moves.remove(move)
+
+    if not possible_moves and board.king_in_check:
+        print("checkmate")
+        board.winner = opp
+        return True
+    else:
+        return False
 
 
 def minmaxing(board, max_depth, player):
     global move_index
     global move_set_calculated
+    global current_player
 
-    max_depth = 2 * max_depth - 1
+    current_player = player
+    max_depth = max_depth + max_depth - 1
     move_index = max_depth
+
+    print(f"Starting minmaxing as {player}")
 
     print(f"MAX DEPTH IS {max_depth}")
 
@@ -185,9 +221,9 @@ def minmaxing(board, max_depth, player):
         best_board = None
         possible_moves = board.generate_possible_moves(player)
 
-        original_position_fen = board.generate_fen()
+        original_position_fen = board.generate_fen().split(" ")[0]
         legal_moves_uci = [move.uci() for move in chess.Board(
-            original_position_fen).legal_moves]
+            original_position_fen + " " + player[0]).legal_moves]
 
         possible_moves_uci = [convert_to_uci(piece, target_position)
                               for piece, target_position in possible_moves
@@ -200,13 +236,14 @@ def minmaxing(board, max_depth, player):
         possible_moves = [move for move in possible_moves if move is not None]
 
         for move in possible_moves:
+            print(f"i will be doing {move}")
             piece, square_to = move
-            previous_position = piece.position
+            original_fen = board.generate_fen()
             board.move_piece_minimax(piece, square_to)
+
             score, sequence, fen_of_board = minimax(
                 board, 1, False, max_depth, player, [move])
-            board.undo_to_previous_minimax(
-                piece, previous_position, piece.position)
+            board.load_fen_minimax(original_fen)
             if score > best_score:
                 best_score = score
                 best_sequence = sequence
@@ -221,22 +258,34 @@ def minmaxing(board, max_depth, player):
 
 
 def minimax(board, depth, isMaximising, max_depth, player, current_sequence=[]):
-    if depth >= max_depth or board.game_over_minimax:
-        return board.evaluate(player), current_sequence, board.generate_fen()
+    if depth >= max_depth:
+        opp = None
+        if current_player == "white":
+            player = "black"
+            opp = "white"
+        else:
+            player = "white"
+            opp = "black"
 
-    if board.generate_fen() in visited_positions:
-        return -100, current_sequence, board.generate_fen()
-    visited_positions.add(board.generate_fen())
+        if check_game_over_minimax(board, player):
+            return board.evaluate(opp), current_sequence, board.generate_fen()
+        else:
+            return -100, current_sequence, board.generate_fen()
 
     best_sequence = None
-    original_position_fen = board.generate_fen()
+    original_position_fen = board.generate_fen().split(" ")[0]
     best_fen = None
 
     if isMaximising:
-        best_score = board.evaluate(player)
+        best_score = float('-inf')
+        if current_player == "white":
+            player = "white"
+        else:
+            player = "black"
+
         possible_moves = board.generate_possible_moves(player)
         legal_moves_uci = [move.uci() for move in chess.Board(
-            original_position_fen).legal_moves]
+            original_position_fen + " " + player[0]).legal_moves]
 
         possible_moves_uci = [convert_to_uci(piece, target_position)
                               for piece, target_position in possible_moves
@@ -249,13 +298,13 @@ def minimax(board, depth, isMaximising, max_depth, player, current_sequence=[]):
         possible_moves = [move for move in possible_moves if move is not None]
 
         for move in possible_moves:
+            print(f"i will be doing {move}")
             piece, square_to = move
-            previous_position = piece.position
+            original_fen = board.generate_fen()
             board.move_piece_minimax(piece, square_to)
             score, sequence, fen = minimax(
                 board, depth + 1, False, max_depth, player, current_sequence + [move])
-            board.undo_to_previous_minimax(
-                piece, previous_position, piece.position)
+            board.load_fen_minimax(original_fen)
             if score > best_score:
                 best_score = score
                 best_sequence = sequence
@@ -263,11 +312,14 @@ def minimax(board, depth, isMaximising, max_depth, player, current_sequence=[]):
         return best_score, best_sequence, best_fen
 
     else:
-        best_score = board.evaluate(player)
-        opponent = "white" if player == "black" else "black"
-        possible_moves = board.generate_possible_moves(opponent)
+        best_score = float('inf')
+        if current_player == "white":
+            player = "black"
+        else:
+            player = "white"
+        possible_moves = board.generate_possible_moves(player)
         legal_moves_uci = [move.uci() for move in chess.Board(
-            original_position_fen).legal_moves]
+            original_position_fen + " " + player[0]).legal_moves]
 
         possible_moves_uci = [convert_to_uci(piece, target_position)
                               for piece, target_position in possible_moves
@@ -281,12 +333,11 @@ def minimax(board, depth, isMaximising, max_depth, player, current_sequence=[]):
 
         for move in possible_moves:
             piece, square_to = move
-            previous_position = piece.position
+            original_fen = board.generate_fen()
             board.move_piece_minimax(piece, square_to)
             score, sequence, fen = minimax(
                 board, depth + 1, True, max_depth, player, current_sequence + [move])
-            board.undo_to_previous_minimax(
-                piece, previous_position, piece.position)
+            board.load_fen_minimax(original_fen)
             if score < best_score:
                 best_score = score
                 best_sequence = sequence
