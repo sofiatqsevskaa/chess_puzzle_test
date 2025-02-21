@@ -62,14 +62,12 @@ def draw_buttons(screen):
 
     dfs_button = pygame.Rect(button_x, Config.GAP, 150, 50)
     bfs_button = pygame.Rect(button_x, Config.GAP + 70, 150, 50)
-    a_star_button = pygame.Rect(button_x, Config.GAP + 140, 150, 50)
-    minimax_button = pygame.Rect(button_x, Config.GAP + 210, 150, 50)
-    alpha_beta_button = pygame.Rect(button_x, Config.GAP + 280, 150, 50)
+    minimax_button = pygame.Rect(button_x, Config.GAP + 140, 150, 50)
+    alpha_beta_button = pygame.Rect(button_x, Config.GAP + 210, 150, 50)
 
     buttons = [
         (dfs_button, "DFS"),
         (bfs_button, "BFS"),
-        (a_star_button, "A*"),
         (minimax_button, "Minimax"),
         (alpha_beta_button, "Alpha-Beta")
     ]
@@ -120,7 +118,7 @@ def main():
     initialize_game()
 
     fen, moves_until_mate = parse_fen_with_mate(
-        "chess_puzzle_test/position5.txt")
+        "chess_puzzle_test/position3.txt")
 
     puzzle_positions, current_player = get_puzzle_positions(
         fen)
@@ -184,7 +182,21 @@ def main():
                             for move in move_set_c:
                                 move_set.append((
                                     move[0].piece_type, move[0].position, move[1]))
+                        elif algorithm == "Alpha-Beta":
+                            sequence = []
+                            moves = []
+                            start_time = time.time()
+                            if moves_until_mate == 1:
+                                moves_until_mate = 2
+                            move_set_c, new_fen = alphabetaminmaxing(
+                                board, moves_until_mate/2, current_player)
+                            board.load_fen(new_fen)
+                            end_time = time.time()
+                            duration_time = round(end_time - start_time, 2)
 
+                            for move in move_set_c:
+                                move_set.append((
+                                    move[0].piece_type, move[0].position, move[1]))
         screen.fill((255, 255, 255))
         draw_board(board)
         # print(move_set)

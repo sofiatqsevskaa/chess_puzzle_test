@@ -21,7 +21,6 @@ class Board:
         self.check_on_player = None
         self.checking_piece = None
         self.winner = None
-        self.game_over_minimax = False
 
     def generate_fen(self):
         board_grid = [['' for _ in range(8)] for _ in range(8)]
@@ -254,7 +253,6 @@ class Board:
         if len(possible_moves) == 0 and self.king_in_check:
             print("Found game over in check game over.")
             self.winner = 'black' if self.current_player == 'white' else 'white'
-            self.game_over_minimax = True
             return True
         return False
 
@@ -341,13 +339,11 @@ class Board:
 
     def move_piece_minimax(self, piece_from, square_to):
         if square_to in self.occupied:
-            print("square is occupied")
             self.pieces.remove(piece_from)
             self.occupied.remove(piece_from.position)
             for piece_to in self.pieces:
                 if piece_to.position == square_to:
                     if "king" in piece_to.piece_type:
-                        print("Cannot capture the king!")
                         return
 
                     self.pieces.remove(piece_to)
@@ -355,7 +351,6 @@ class Board:
                     break
 
         else:
-            print("square is not occupied")
             self.pieces.remove(piece_from)
             self.occupied.remove(piece_from.position)
 
@@ -487,22 +482,9 @@ class Board:
             player) - self.evaluate_king_safety(self.opponent(player))
         score += king_safety_score
 
-        white_rook_positions = [
-            piece.position for piece in self.pieces if piece.piece_type == 'white rook']
-
-        black_king_positions = [
-            piece.position for piece in self.pieces if piece.piece_type == 'black king']
-
-        print(
-            f"white rook on {white_rook_positions} and possible moves for {self.opponent(player)}: {self.generate_possible_moves(self.opponent(player))}")
-
         if self.king_in_check and self.check_on_player == self.opponent(player):
             score += 100
             if len(self.generate_possible_moves(self.opponent(player))) == 0:
-                print(
-                    f"Found game over in evaluate with {player} in check and pieces on {self.pieces}")
-                self.winner = player
-                self.game_over_minimax = True
                 score += 150
 
         if self.king_in_check and self.check_on_player == player:
@@ -590,17 +572,17 @@ class Board:
             self.check_on_player = None
             return False
 
-        print(f"checking for check on player {current_player}")
+        # print(f"checking for check on player {current_player}")
 
         white_rook_positions = [
             piece.position for piece in self.pieces if piece.piece_type == 'white rook']
 
-        print(f"white rook on {white_rook_positions}")
+        # print(f"white rook on {white_rook_positions}")
 
         self.king_in_check = if_check(
             current_king.position, all_attacking_squares)
 
-        print(f"King in check: {self.king_in_check}")
+        # print(f"King in check: {self.king_in_check}")
 
         if self.king_in_check:
             self.check_on_player = current_player
@@ -668,7 +650,7 @@ class Board:
                            dx, current_king.position[1] + dy)
                 if 0 <= new_pos[0] < 8 and 0 <= new_pos[1] < 8:
                     if new_pos not in self.occupied and not is_square_attacked(new_pos, recalculated_opponent_attacking_squares):
-                        print(f"King can escape to {new_pos}")
+                        # print(f"King can escape to {new_pos}")
                         king_safe = True
 
             return king_safe
@@ -799,7 +781,7 @@ class Board:
                     if p.piece_type == "king" and (p.position[0], p.position[1]) == square:
                         possible_moves.remove((piece, square))
 
-        if self.king_in_check:
-            print(f"Possible moves: {possible_moves}")
+        # if self.king_in_check:
+        #     print(f"Possible moves: {possible_moves}")
 
         return possible_moves
