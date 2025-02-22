@@ -147,7 +147,7 @@ class Board:
                 piece_images[key], (Config.TILE_SIZE, Config.TILE_SIZE))
 
         self.pieces = []
-        self.occupied = []  # Track occupied positions
+        self.occupied = []
         rows = board_fen.split('/')
 
         for rank in range(8):
@@ -161,7 +161,6 @@ class Board:
                     position = (rank, file)
                     self.pieces.append(
                         Piece(piece_type, color, position, piece_images[f"{color} {piece_type}"], self.screen))
-                    # Add position to occupied list
                     self.occupied.append(position)
                     file += 1
 
@@ -172,33 +171,6 @@ class Board:
         cloned_board.screen = self.screen
         cloned_board.font = self.font
         return cloned_board
-
-    def get_original_position(self):
-        fen = ''
-        empty_count = 0
-
-        for y in range(7, -1, -1):
-            for x in range(8):
-                piece_found = False
-                for piece in self.pieces:
-                    if piece.position[0] == x and piece.position[1] == y:
-                        if empty_count > 0:
-                            fen += str(empty_count)
-                            empty_count = 0
-                        fen += piece.piece_type.split(' ')[1][0]
-                        piece_found = True
-                        break
-                if not piece_found:
-                    empty_count += 1
-
-            if empty_count > 0:
-                fen += str(empty_count)
-                empty_count = 0
-
-            if y != 0:
-                fen += '/'
-
-        return fen
 
     def draw(self):
         self.screen.fill((255, 255, 255))
@@ -244,11 +216,6 @@ class Board:
 
         possible_moves = self.check_for_differences(
             legal_moves_uci, possible_moves)
-
-        king_position = [
-            piece.position for piece in self.pieces if piece.piece_type == f"{opponent} king"][0]
-        rook_position = [
-            piece.position for piece in self.pieces if piece.piece_type == f"{self.current_player} rook"]
 
         if len(possible_moves) == 0 and self.king_in_check:
             print("Found game over in check game over.")

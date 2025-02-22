@@ -87,10 +87,10 @@ def draw_buttons(screen):
     return {text: button for button, text in buttons}
 
 
-def display_moves(screen, moves, winner=None):
+def display_moves(screen, moves,  timer, winner=None):
     font = pygame.font.SysFont('Verdana', 16)
     pos_x, pos_y, offset_y, offset_x = 700, 450, 60, 250
-    winner_text = f"{winner} won!"
+    winner_text = f"{winner} won! Time taken: {timer}s."
     if winner:
         screen.blit(font.render(winner_text, True, (0, 0, 0)),
                     (700, 400))
@@ -118,7 +118,7 @@ def main():
     initialize_game()
 
     fen, moves_until_mate = parse_fen_with_mate(
-        "chess_puzzle_test/position3.txt")
+        "chess_puzzle_test/position2.txt")
 
     puzzle_positions, current_player = get_puzzle_positions(
         fen)
@@ -137,6 +137,7 @@ def main():
     moves = []
     running = True
     move_set = []
+    duration_time = None
 
     while running:
         for event in pygame.event.get():
@@ -203,7 +204,7 @@ def main():
         draw_pieces(board.pieces, screen)
         buttons = draw_buttons(screen)
         # print(board.winner)
-        display_moves(screen, move_set, board.winner)
+        display_moves(screen, move_set, duration_time, board.winner)
         pygame.display.flip()
 
     pygame.quit()
