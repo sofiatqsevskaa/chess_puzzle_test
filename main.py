@@ -172,8 +172,8 @@ def main():
                             sequence = []
                             moves = []
                             start_time = time.time()
-                            if moves_until_mate == 1:
-                                moves_until_mate = 2
+                            if moves_until_mate % 2 == 1:
+                                moves_until_mate = moves_until_mate + 1
                             move_set_c, new_fen = minmaxing(
                                 board, moves_until_mate/2, current_player)
                             board.load_fen(new_fen)
@@ -187,8 +187,8 @@ def main():
                             sequence = []
                             moves = []
                             start_time = time.time()
-                            if moves_until_mate == 1:
-                                moves_until_mate = 2
+                            if moves_until_mate % 2 == 1:
+                                moves_until_mate = moves_until_mate + 1
                             move_set_c, new_fen = alphabetaminmaxing(
                                 board, moves_until_mate/2, current_player)
                             board.load_fen(new_fen)
