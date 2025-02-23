@@ -1,3 +1,4 @@
+
 from collections import deque
 import chess
 from config import Config
@@ -246,6 +247,8 @@ def minmaxing(board, max_depth, player):
                 board, 1, False, max_depth, player, [move])
             board.load_fen_minimax(original_fen)
             if score > best_score:
+                print(
+                    f"Updating best score in minmaxing: {best_score} -> {score}")
                 best_score = score
                 best_sequence = sequence
                 best_board = fen_of_board
@@ -369,8 +372,8 @@ def alphabetaminmaxing(board, max_depth, player):
         best_sequence = None
         best_score = -100
         best_board = None
-        alpha = -1000
-        beta = 1000
+        alpha = 50
+        beta = 10000
         possible_moves = board.generate_possible_moves(player)
 
         original_position_fen = board.generate_fen().split(" ")[0]
@@ -396,7 +399,9 @@ def alphabetaminmaxing(board, max_depth, player):
             score, sequence, fen_of_board = alphabetaminimax(
                 board, 1, False, max_depth, player, alpha, beta, [move])
             board.load_fen_minimax(original_fen)
-            if score > best_score:
+            if score and score > best_score:
+                print(
+                    f"Updating best score: {best_score} -> {score} in minmaxing")
                 best_score = score
                 best_sequence = sequence
                 best_board = fen_of_board
@@ -424,7 +429,7 @@ def alphabetaminimax(board, depth, isMaximising, max_depth, player, alpha, beta,
         if check_game_over_minimax(board, player):
             return board.evaluate(opp), current_sequence, board.generate_fen()
         else:
-            return -100, current_sequence, board.generate_fen()
+            return None, current_sequence, board.generate_fen()
 
     best_sequence = None
     original_position_fen = board.generate_fen().split(" ")[0]
@@ -461,7 +466,8 @@ def alphabetaminimax(board, depth, isMaximising, max_depth, player, alpha, beta,
             score, sequence, fen = alphabetaminimax(
                 board, depth + 1, False, max_depth, player, alpha, beta, current_sequence + [move])
             board.load_fen_minimax(original_fen)
-            if score > best_score:
+            if score and score > best_score:
+                print(f"Updating best score: {best_score} -> {score} in max")
                 best_score = score
                 best_sequence = sequence
                 best_fen = fen
@@ -500,7 +506,8 @@ def alphabetaminimax(board, depth, isMaximising, max_depth, player, alpha, beta,
             score, sequence, fen = alphabetaminimax(
                 board, depth + 1, True, max_depth, player, alpha, beta, current_sequence + [move])
             board.load_fen_minimax(original_fen)
-            if score < best_score:
+            if score and score < best_score:
+                print(f"Updating best score: {best_score} -> {score} in min")
                 best_score = score
                 best_sequence = sequence
                 best_fen = fen

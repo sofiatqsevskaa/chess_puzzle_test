@@ -21,6 +21,26 @@ class Board:
         self.check_on_player = None
         self.checking_piece = None
         self.winner = None
+        path = "chess_puzzle_test/assets/"
+
+        self.piece_images = {
+            "white pawn": pygame.image.load(path + "white_pawn.png"),
+            "black pawn": pygame.image.load(path + "black_pawn.png"),
+            "white rook": pygame.image.load(path + "white_rook.png"),
+            "black rook": pygame.image.load(path + "black_rook.png"),
+            "white knight": pygame.image.load(path + "white_knight.png"),
+            "black knight": pygame.image.load(path + "black_knight.png"),
+            "white bishop": pygame.image.load(path + "white_bishop.png"),
+            "black bishop": pygame.image.load(path + "black_bishop.png"),
+            "white queen": pygame.image.load(path + "white_queen.png"),
+            "black queen": pygame.image.load(path + "black_queen.png"),
+            "white king": pygame.image.load(path + "white_king.png"),
+            "black king": pygame.image.load(path + "black_king.png"),
+        }
+
+        for key in self.piece_images:
+            self.piece_images[key] = pygame.transform.smoothscale(
+                self.piece_images[key], (Config.TILE_SIZE, Config.TILE_SIZE))
 
     def generate_fen(self):
         board_grid = [['' for _ in range(8)] for _ in range(8)]
@@ -72,27 +92,6 @@ class Board:
             'p': 'pawn', 'n': 'knight', 'b': 'bishop', 'r': 'rook', 'q': 'queen', 'k': 'king'
         }
 
-        path = "chess_puzzle_test/assets/"
-
-        piece_images = {
-            "white pawn": pygame.image.load(path + "white_pawn.png"),
-            "black pawn": pygame.image.load(path + "black_pawn.png"),
-            "white rook": pygame.image.load(path + "white_rook.png"),
-            "black rook": pygame.image.load(path + "black_rook.png"),
-            "white knight": pygame.image.load(path + "white_knight.png"),
-            "black knight": pygame.image.load(path + "black_knight.png"),
-            "white bishop": pygame.image.load(path + "white_bishop.png"),
-            "black bishop": pygame.image.load(path + "black_bishop.png"),
-            "white queen": pygame.image.load(path + "white_queen.png"),
-            "black queen": pygame.image.load(path + "black_queen.png"),
-            "white king": pygame.image.load(path + "white_king.png"),
-            "black king": pygame.image.load(path + "black_king.png"),
-        }
-
-        for key in piece_images:
-            piece_images[key] = pygame.transform.smoothscale(
-                piece_images[key], (Config.TILE_SIZE, Config.TILE_SIZE))
-
         self.pieces = []
         rows = board_fen.split('/')
 
@@ -105,7 +104,7 @@ class Board:
                     color = 'white' if char.isupper() else 'black'
                     piece_type = piece_symbols[char]
                     self.pieces.append(
-                        Piece(piece_type, color, (rank, file),  piece_images[f"{color} {piece_type}"], self.screen))
+                        Piece(piece_type, color, (rank, file),  self.piece_images[f"{color} {piece_type}"], self.screen))
                     file += 1
 
     def find_piece(self, piece_type):

@@ -1,0 +1,57 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+env/
+.venv/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# macOS and Windows system files
+.DS_Store
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sqlite3
+*.db
+
+# Test coverage and profiling
+.coverage
+*.cover
+.hypothesis/
+
+# Package files
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# PIP dependency file
+pip-log.txt
+pip-delete-this-directory.txt
+
+# PyCharm
+/.idea/
+/*.iml
+
+# Spyder
+.spyderproject
+.spyderworkspace
+
+# MyPy type checking
+.mypy_cache/
+
+# VS Code Python settings
+.settings/
