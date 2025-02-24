@@ -270,7 +270,6 @@ class Board:
             if piece_from.position in self.occupied:
                 self.occupied.remove(piece_from.position)
             if target_piece:
-                # print(f"Capturing piece {target_piece.piece_type}")
                 if target_piece in self.pieces:
                     self.pieces.remove(target_piece)
                 self.occupied.remove(target_piece.position)
@@ -304,106 +303,53 @@ class Board:
         return new_p
 
     def move_piece_minimax(self, piece_from, square_to):
-        if square_to in self.occupied:
-            self.pieces.remove(piece_from)
-            self.occupied.remove(piece_from.position)
-            for piece_to in self.pieces:
-                if piece_to.position == square_to:
-                    if "king" in piece_to.piece_type:
-                        return
+        captured = None
+        for piece_to in self.pieces:
+            if piece_to.position == square_to:
+                if piece_to.color == piece_from.color:
+                    print(
+                        f"Invalid move: Cannot capture own piece {piece_to.piece_type}")
+                    return None
 
-                    self.pieces.remove(piece_to)
-                    self.occupied.remove(square_to)
-                    break
+                if "king" in piece_to.piece_type:
+                    return None
 
-        else:
-            self.pieces.remove(piece_from)
-            self.occupied.remove(piece_from.position)
+                captured = piece_to
+                self.pieces.remove(piece_to)
+                self.occupied.remove(square_to)
+                break
 
-        new_p = Piece(piece_from.piece_type.split(" ")[1],
-                      piece_from.color,
-                      square_to,
-                      piece_from.image,
-                      piece_from.screen)
+        self.occupied.remove(piece_from.position)
+        piece_from.position = square_to
+        self.occupied.append(square_to)
 
-        self.pieces.append(new_p)
-        self.occupied.append(new_p.position)
+        return captured
 
-    def undo_to_previous(self, piece, original_piece_square, square_to):
-        if self.captured_piece and self.captured_piece.position == square_to:
-            if piece.position in self.occupied:
-                self.occupied.remove(piece.position)
-            self.occupied.append(self.captured_piece.position)
-
-            self.pieces.append(self.captured_piece)
-
-            self.pieces.remove(piece)
-
-            piece.position = original_piece_square
-            self.pieces.append(piece)
-            self.occupied.append(piece.position)
-
-            self.captured_piece = None
-        else:
-            if piece in self.captured_pieces and piece not in self.pieces:
-                self.pieces.append(piece)
-                self.occupied.append(piece.position)
-                self.captured_pieces = [
-                    p for p in self.captured_pieces if p != piece]
-            else:
-                if piece.position in self.occupied:
-                    self.occupied.remove(piece.position)
-                # else:
-                #     print(
-                #         f"WARNING: Attempted to remove {piece.position}, but it's not in occupied: {self.occupied}"
-                #     )
-
-                if piece in self.pieces:
-                    self.pieces.remove(piece)
-                # else:
-                #     print(
-                #         f"WARNING: Attempted to remove {piece}, but it's not in pieces: {self.pieces}"
-                #     )
-
-                piece.position = original_piece_square
-                self.pieces.append(piece)
-                self.occupied.append(piece.position)
-
-        return piece
-
-    def undo_to_previous_minimax(self, piece, original_square, square_to):
-        # print(
-        #     f"Undoing move: {piece.piece_type} from {square_to} back to {original_square}")
-
+    def undo(self, piece, original_square, square_to, captured, captured_position):
         original_piece = None
         for p in self.pieces:
-            if p.id == piece.id:
+            if p.piece_type == piece.piece_type and p.position == square_to:
                 original_piece = p
                 break
 
-        if not original_piece:
-            # print(
-            #     f"Error: Original piece not found for {piece.piece_type} at {piece.position}")
-            return
+        if original_piece is None:
+            print(
+                f"Undo failed: Original piece {piece.piece_type} at {original_square} not found")
+            print(f"pieces: {self.pieces}")
+            return None
 
-        if original_piece.position in self.occupied:
-            self.occupied.remove(original_piece.position)
-        # else:
-        #     print(
-        #         f"Warning: Tried to remove {original_piece.position}, but it was not found!")
-
+        # Move the piece back to its original position
+        self.occupied.remove(original_piece.position)
         original_piece.position = original_square
         self.occupied.append(original_square)
 
-        if self.captured_piece and self.captured_piece.position == square_to:
-            # print(
-            #     f"Restoring captured piece {self.captured_piece.piece_type} at {self.captured_piece.position}")
-            self.pieces.append(self.captured_piece)
-            self.occupied.append(self.captured_piece.position)
-            self.captured_piece = None
+        # Restore the captured piece without creating a new instance
+        if captured and captured_position == square_to:
+            print(
+                f"Restoring captured piece {captured.piece_type} at {captured_position}")
+            self.pieces.append(captured)
+            self.occupied.append(captured_position)
 
-        # print(
-        #     f"After undo: pieces={[p.position for p in self.pieces]}, occupied={self.occupied}")
         return original_piece
 
     def opponent(self, player):
