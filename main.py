@@ -15,7 +15,7 @@ def get_puzzle_positions(fen):
 
 
 def load_piece_images():
-    path = "chess_puzzle_test/assets/"
+    path = "assets/"
     piece_images = {
         "white pawn": pygame.image.load(path + "white_pawn.png"),
         "black pawn": pygame.image.load(path + "black_pawn.png"),
@@ -116,9 +116,10 @@ def parse_fen_with_mate(file):
 
 def main():
     initialize_game()
+    pos_path = "positions/"
 
     fen, moves_until_mate = parse_fen_with_mate(
-        "chess_puzzle_test/position9.txt")
+        pos_path + "position3.txt")
 
     puzzle_positions, current_player = get_puzzle_positions(
         fen)
@@ -200,10 +201,8 @@ def main():
                                     move[0].piece_type, move[0].position, move[1]))
         screen.fill((255, 255, 255))
         draw_board(board)
-        # print(move_set)
         draw_pieces(board.pieces, screen)
         buttons = draw_buttons(screen)
-        # print(board.winner)
         display_moves(screen, move_set, duration_time, board.winner)
         pygame.display.flip()
 

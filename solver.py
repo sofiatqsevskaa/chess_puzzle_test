@@ -4,18 +4,9 @@ from config import Config
 import pygame
 import sys
 
-
 move_index = None
 move_set_calculated = None
 winner = None
-
-
-def display_moves(board, moves, screen, font):
-    board.draw()
-    for piece in board.pieces:
-        piece.draw(screen)
-    pygame.display.flip()
-    pygame.display.update()
 
 
 def convert_to_uci(piece, target_position):
@@ -48,14 +39,12 @@ def dfs(board, depth, max_depth, player, sequence, moves):
 
     move_index = max_depth
     original_position_fen = board.generate_fen()
-    board_state_before = board.get_state()
 
     if move_set_calculated is None:
         if depth >= max_depth:
-            if board.check_game_over():
+            if game_over_check(board, player):
                 print("Game over! Sequence found:", sequence)
-                move_set_calculated = display_moves(
-                    board, moves, board.screen, board.font)
+                move_set_calculated = moves
                 return (sequence, board)
             return None
 
@@ -73,27 +62,31 @@ def dfs(board, depth, max_depth, player, sequence, moves):
             board, move_uci) for move_uci in possible]
         possible_moves = [move for move in possible_moves if move is not None]
 
-        for piece, target_position in possible_moves:
+        for piece, square_to in possible_moves:
             sequence.append(
-                (piece.piece_type, piece.position, target_position))
+                (piece.piece_type, piece.position, square_to))
             original_position = piece.position
 
-            board.move_piece(piece, target_position)
+            captured = board.move_piece(piece, square_to)
+            pos = None
+            if captured:
+                pos = captured.position
+
             moves.append(
-                (piece, original_position, target_position))
+                (piece, original_position, square_to))
 
             board.current_player = "white" if player == "black" else "black"
             result = dfs(board, depth + 1, max_depth, "white" if player ==
                          "black" else "black", sequence, moves)
 
             if result is None:
-                board.load_state(board_state_before)
+                board.undo(piece, original_position, square_to,
+                           captured, pos)
                 sequence.pop()
                 moves.pop()
                 print("No res found")
 
             if depth == max_depth:
-                board.captured_pieces = []
                 print("Max depth reached")
 
             if result is not None:
@@ -110,7 +103,6 @@ def bfs(board, max_depth, player, sequence, moves):
     global move_index
 
     move_index = max_depth
-    moves = []
 
     if move_set_calculated is None:
         queue = deque([(board, 0, player, [], [])])
@@ -120,18 +112,15 @@ def bfs(board, max_depth, player, sequence, moves):
             print("BFS: ", depth, max_depth, current_player)
 
             if depth >= max_depth:
-
-                if current_board.check_game_over():
+                if game_over_check(current_board, current_player):
                     print("Game over! Sequence found:", sequence)
-                    print("Moves:", move_set_calculated)
+                    move_set_calculated = move_list
                     return (sequence, current_board)
                 continue
 
             possible_moves = current_board.generate_possible_moves(
                 current_player)
-
             original_position_fen = current_board.generate_fen()
-            board_state_before = current_board.get_state()
 
             board_1 = chess.Board(original_position_fen)
             legal_moves_uci = [move.uci() for move in board_1.legal_moves]
@@ -140,7 +129,6 @@ def bfs(board, max_depth, player, sequence, moves):
 
             possible = current_board.check_for_differences(
                 legal_moves_uci, possible_moves_uci)
-
             possible_moves = [convert_from_uci(
                 current_board, move_uci) for move_uci in possible]
             possible_moves = [
@@ -149,26 +137,32 @@ def bfs(board, max_depth, player, sequence, moves):
             for piece, target_position in possible_moves:
                 new_sequence = sequence + \
                     [(piece.piece_type, piece.position, target_position)]
+                original_position = piece.position
+
+                captured = current_board.move_piece(
+                    piece, target_position)
+                pos = captured.position if captured else None
+
                 new_move_list = move_list + \
-                    [(piece, piece.position, target_position)]
+                    [(piece, original_position, target_position,
+                      captured, pos)]
 
                 new_board = current_board.clone()
-                new_board.move_piece(piece, target_position)
+                new_board.current_player = "white" if current_player == "black" else "black"
 
-                next_player = "white" if current_player == "black" else "black"
-                new_board.current_player = next_player
-                queue.append((new_board, depth + 1, next_player,
-                             new_sequence, new_move_list))
+                queue.append(
+                    (new_board, depth + 1, new_board.current_player, new_sequence, new_move_list))
 
-            current_board.load_state(board_state_before)
+                current_board.undo(piece, original_position,
+                                   target_position, captured, pos)
 
-        print("no solution found")
+        print("No solution found")
         return None
     else:
         return (sequence, board)
 
 
-def check_game_over_minimax(board, player):
+def game_over_check(board, player):
     possible_moves = board.generate_possible_moves(player)
 
     original_position_fen = board.generate_fen().split(" ")[0]
@@ -237,22 +231,18 @@ def minmaxing(board, max_depth, player):
         possible_moves = [move for move in possible_moves if move is not None]
 
         for move in possible_moves:
-            # print(f"i will be doing {move}")
             piece, square_to = move
-            # original_fen = board.generate_fen()
             original_square = piece.position
-            captured = board.move_piece_minimax(piece, square_to)
+            captured = board.move_piece(piece, square_to)
             pos = None
             if captured:
                 pos = captured.position
-            board.move_piece_minimax(piece, square_to)
+            board.move_piece(piece, square_to)
             score, sequence, fen_of_board = minimax(
                 board, 1, False, max_depth, player, [move])
 
             board.undo(
                 piece, original_square, square_to, captured, pos)
-
-            # board.load_fen_minimax(original_fen)
             if score and score > best_score:
                 best_score = score
                 best_sequence = sequence
@@ -276,7 +266,7 @@ def minimax(board, depth, isMaximising, max_depth, player, current_sequence=[]):
             player = "white"
             opp = "black"
 
-        if check_game_over_minimax(board, player):
+        if game_over_check(board, player):
             return board.evaluate(opp), current_sequence, board.generate_fen()
         else:
             return None, current_sequence, board.generate_fen()
@@ -313,7 +303,7 @@ def minimax(board, depth, isMaximising, max_depth, player, current_sequence=[]):
             piece, square_to = move
             original_square = piece.position
             # original_fen = board.generate_fen()
-            captured = board.move_piece_minimax(piece, square_to)
+            captured = board.move_piece(piece, square_to)
             pos = None
             if captured:
                 pos = captured.position
@@ -357,13 +347,13 @@ def minimax(board, depth, isMaximising, max_depth, player, current_sequence=[]):
             # original_fen = board.generate_fen()
             original_square = piece.position
 
-            captured = board.move_piece_minimax(piece, square_to)
+            captured = board.move_piece(piece, square_to)
             pos = None
 
             if captured:
                 pos = captured.position
 
-            board.move_piece_minimax(piece, square_to)
+            board.move_piece(piece, square_to)
             score, sequence, fen = minimax(
                 board, depth + 1, True, max_depth, player, current_sequence + [move])
 
@@ -420,13 +410,13 @@ def alphabetaminmaxing(board, max_depth, player):
             # original_fen = board.generate_fen()
             original_square = piece.position
 
-            captured = board.move_piece_minimax(piece, square_to)
+            captured = board.move_piece(piece, square_to)
             pos = None
 
             if captured:
                 pos = captured.position
 
-            board.move_piece_minimax(piece, square_to)
+            board.move_piece(piece, square_to)
 
             score, sequence, fen_of_board = alphabetaminimax(
                 board, 1, False, max_depth, player, alpha, beta, [move])
@@ -458,7 +448,7 @@ def alphabetaminimax(board, depth, isMaximising, max_depth, player, alpha, beta,
             player = "white"
             opp = "black"
 
-        if check_game_over_minimax(board, player):
+        if game_over_check(board, player):
             return board.evaluate(opp), current_sequence, board.generate_fen()
         else:
             return None, current_sequence, board.generate_fen()
@@ -496,13 +486,13 @@ def alphabetaminimax(board, depth, isMaximising, max_depth, player, alpha, beta,
             # original_fen = board.generate_fen()
             original_square = piece.position
 
-            captured = board.move_piece_minimax(piece, square_to)
+            captured = board.move_piece(piece, square_to)
             pos = None
 
             if captured:
                 pos = captured.position
 
-            board.move_piece_minimax(piece, square_to)
+            board.move_piece(piece, square_to)
             score, sequence, fen = alphabetaminimax(
                 board, depth + 1, False, max_depth, player, alpha, beta, current_sequence + [move])
 
@@ -546,13 +536,13 @@ def alphabetaminimax(board, depth, isMaximising, max_depth, player, alpha, beta,
             # original_fen = board.generate_fen()
             original_square = piece.position
 
-            captured = board.move_piece_minimax(piece, square_to)
+            captured = board.move_piece(piece, square_to)
             pos = None
 
             if captured:
                 pos = captured.position
 
-            board.move_piece_minimax(piece, square_to)
+            board.move_piece(piece, square_to)
             score, sequence, fen = alphabetaminimax(
                 board, depth + 1, True, max_depth, player, alpha, beta, current_sequence + [move])
             board.undo(

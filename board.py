@@ -21,7 +21,7 @@ class Board:
         self.check_on_player = None
         self.checking_piece = None
         self.winner = None
-        path = "chess_puzzle_test/assets/"
+        path = "assets/"
 
         self.piece_images = {
             "white pawn": pygame.image.load(path + "white_pawn.png"),
@@ -107,62 +107,6 @@ class Board:
                         Piece(piece_type, color, (rank, file),  self.piece_images[f"{color} {piece_type}"], self.screen))
                     file += 1
 
-    def find_piece(self, piece_type):
-        for piece in self.pieces:
-            if piece.piece_type == piece_type:
-                return piece.position
-
-        return (-100, -100)
-
-    def load_fen_minimax(self, fen):
-        parts = fen.split()
-        board_fen = parts[0]
-        self.current_player = 'white' if parts[1] == 'w' else 'black'
-
-        piece_symbols = {
-            'P': 'pawn', 'N': 'knight', 'B': 'bishop', 'R': 'rook', 'Q': 'queen', 'K': 'king',
-            'p': 'pawn', 'n': 'knight', 'b': 'bishop', 'r': 'rook', 'q': 'queen', 'k': 'king'
-        }
-
-        path = "chess_puzzle_test/assets/"
-
-        piece_images = {
-            "white pawn": pygame.image.load(path + "white_pawn.png"),
-            "black pawn": pygame.image.load(path + "black_pawn.png"),
-            "white rook": pygame.image.load(path + "white_rook.png"),
-            "black rook": pygame.image.load(path + "black_rook.png"),
-            "white knight": pygame.image.load(path + "white_knight.png"),
-            "black knight": pygame.image.load(path + "black_knight.png"),
-            "white bishop": pygame.image.load(path + "white_bishop.png"),
-            "black bishop": pygame.image.load(path + "black_bishop.png"),
-            "white queen": pygame.image.load(path + "white_queen.png"),
-            "black queen": pygame.image.load(path + "black_queen.png"),
-            "white king": pygame.image.load(path + "white_king.png"),
-            "black king": pygame.image.load(path + "black_king.png"),
-        }
-
-        for key in piece_images:
-            piece_images[key] = pygame.transform.smoothscale(
-                piece_images[key], (Config.TILE_SIZE, Config.TILE_SIZE))
-
-        self.pieces = []
-        self.occupied = []
-        rows = board_fen.split('/')
-
-        for rank in range(8):
-            file = 0
-            for char in rows[rank]:
-                if char.isdigit():
-                    file += int(char)
-                else:
-                    color = 'white' if char.isupper() else 'black'
-                    piece_type = piece_symbols[char]
-                    position = (rank, file)
-                    self.pieces.append(
-                        Piece(piece_type, color, position, piece_images[f"{color} {piece_type}"], self.screen))
-                    self.occupied.append(position)
-                    file += 1
-
     def clone(self):
         cloned_pieces = [piece.clone() for piece in self.pieces]
         cloned_board = Board(None, cloned_pieces, self.current_player)
@@ -201,27 +145,6 @@ class Board:
         to_square = chess.square(target_position[1], 7 - target_position[0])
         return chess.Move(from_square, to_square).uci()
 
-    def check_game_over(self):
-        opponent = 'black' if self.current_player == 'white' else 'white'
-        possible = self.generate_possible_moves(self.current_player)
-
-        possible_moves = [self.convert_to_uci(
-            piece, target_position) for piece, target_position in possible]
-
-        original_position_fen = self.generate_fen()
-
-        board_1 = chess.Board(original_position_fen)
-        legal_moves_uci = [move.uci() for move in board_1.legal_moves]
-
-        possible_moves = self.check_for_differences(
-            legal_moves_uci, possible_moves)
-
-        if len(possible_moves) == 0 and self.king_in_check:
-            print("Found game over in check game over.")
-            self.winner = 'black' if self.current_player == 'white' else 'white'
-            return True
-        return False
-
     def check_for_differences(self, legal_moves_uci, possible_moves_uci):
         legal_moves_set = set(legal_moves_uci)
         possible_moves_set = set(possible_moves_uci)
@@ -237,72 +160,7 @@ class Board:
     def is_position_attacked(self, position, opponent_moves):
         return position in opponent_moves
 
-    def get_state(self):
-        return {
-            "pieces": [(piece.piece_type, piece.position, piece.image) for piece in self.pieces],
-            "captured_pieces": list(self.captured_pieces),
-        }
-
-    def load_state(self, state):
-        self.pieces = []
-
-        for piece_type, position, image in state["pieces"]:
-            piece = Piece(piece_type.split(' ')[1], piece_type.split(
-                ' ')[0], position, image, self.screen)
-            self.pieces.append(piece)
-
-        self.captured_pieces = list(state["captured_pieces"])
-
     def move_piece(self, piece_from, square_to):
-        new_p = None
-
-        if square_to in self.occupied:
-            target_piece = None
-            for piece_to in self.pieces:
-                if piece_to.position == square_to:
-                    target_piece = piece_to
-                    break
-
-            if target_piece and "king" in target_piece.piece_type.lower():
-                return None
-
-            self.pieces.remove(piece_from)
-            if piece_from.position in self.occupied:
-                self.occupied.remove(piece_from.position)
-            if target_piece:
-                if target_piece in self.pieces:
-                    self.pieces.remove(target_piece)
-                self.occupied.remove(target_piece.position)
-                self.captured_piece = target_piece
-
-            new_p = Piece(
-                piece_from.piece_type.split(" ")[1],
-                piece_from.color,
-                square_to,
-                piece_from.image,
-                piece_from.screen
-            )
-            self.pieces.append(new_p)
-            self.occupied.append(new_p.position)
-
-        else:
-            if piece_from.position in self.occupied:
-                self.occupied.remove(piece_from.position)
-
-            self.pieces.remove(piece_from)
-            new_p = Piece(
-                piece_from.piece_type.split(" ")[1],
-                piece_from.color,
-                square_to,
-                piece_from.image,
-                piece_from.screen
-            )
-            self.pieces.append(new_p)
-            self.occupied.append(new_p.position)
-
-        return new_p
-
-    def move_piece_minimax(self, piece_from, square_to):
         captured = None
         for piece_to in self.pieces:
             if piece_to.position == square_to:
@@ -338,12 +196,10 @@ class Board:
             print(f"pieces: {self.pieces}")
             return None
 
-        # Move the piece back to its original position
         self.occupied.remove(original_piece.position)
         original_piece.position = original_square
         self.occupied.append(original_square)
 
-        # Restore the captured piece without creating a new instance
         if captured and captured_position == square_to:
             print(
                 f"Restoring captured piece {captured.piece_type} at {captured_position}")
@@ -406,8 +262,6 @@ class Board:
         return score
 
     def generate_possible_moves(self, current_player):
-        # print(f"Generating possible moves for {current_player}")
-
         possible_moves = []
         opponent_king_squares = []
         opponent_attacking_squares = []
@@ -415,8 +269,6 @@ class Board:
         pieces_saying_check = []
 
         def is_within_board(x, y):
-            # print(
-            #     f"Checking if position ({x}, {y}) is within the board bounds.")
             return 0 < x <= 8 and 0 < y <= 8
 
         for piece in self.pieces:
@@ -434,7 +286,6 @@ class Board:
                     y = piece.position[1] + dy
                     if is_within_board(x, y):
                         opponent_king_squares.append((x, y))
-                        # print(f"Opponent's king can move to: ({x}, {y})")
 
         def get_attacking_squares():
             for piece in self.pieces:
@@ -493,8 +344,6 @@ class Board:
 
         self.king_in_check = if_check(
             current_king.position, all_attacking_squares)
-
-        # print(f"King in check: {self.king_in_check}")
 
         if self.king_in_check:
             self.check_on_player = current_player
@@ -682,18 +531,9 @@ class Board:
                                     possible_moves.append(
                                         (piece, next_position))
 
-        # for piece, square in possible_moves[:]:
-        #     for p in self.pieces:
-        #         if p.piece_type == "king" and (p.position[0], p.position[1]) == square and p.color == piece.color:
-        #             possible_moves.remove((piece, square))
-
         for piece, square in possible_moves:
             if square in self.occupied:
                 for p in self.pieces:
                     if p.piece_type == "king" and (p.position[0], p.position[1]) == square:
                         possible_moves.remove((piece, square))
-
-        # if self.king_in_check:
-        #     print(f"Possible moves: {possible_moves}")
-
         return possible_moves
