@@ -248,8 +248,10 @@ def main():
                 draw_board(board)
                 buttons = draw_buttons(screen)
                 draw_pieces(board.pieces, screen)
+                display_moves(screen, move_set, duration_time, board.winner)
+
                 pygame.display.flip()
-                pygame.time.wait(800)
+                pygame.time.wait(1000)
                 ct += 1
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:

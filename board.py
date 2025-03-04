@@ -120,7 +120,7 @@ class Board:
         self.screen.fill((255, 255, 255))
         for row in range(8):
             for col in range(8):
-                color = Config.YELLOW if (row + col) % 2 == 0 else Config.BROWN
+                color = Config.WHITE if (row + col) % 2 == 0 else Config.GRAY
                 pygame.draw.rect(self.screen, color,
                                  (self.offset + col * self.tile_size, self.offset + row * self.tile_size,
                                   self.tile_size, self.tile_size))

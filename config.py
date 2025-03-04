@@ -2,8 +2,8 @@ class Config:
     WINDOW_SIZE = 640
     TILE_SIZE = WINDOW_SIZE // 8
     PIECE_SIZE = 60
-    YELLOW = (245, 215, 142)
-    BROWN = (142, 83, 18)
+    WHITE = (220, 220, 220)
+    GRAY = (105, 105, 105)
     BLACK = (0, 0, 0)
     GAP = 25
     SCALED_SIZE = 60
