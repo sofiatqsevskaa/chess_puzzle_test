@@ -105,6 +105,7 @@ class Board:
                     piece_type = piece_symbols[char]
                     self.pieces.append(
                         Piece(piece_type, color, (rank, file),  self.piece_images[f"{color} {piece_type}"], self.screen))
+                    self.occupied.append((rank, file))
                     file += 1
 
     def clone(self):
@@ -159,6 +160,18 @@ class Board:
 
     def is_position_attacked(self, position, opponent_moves):
         return position in opponent_moves
+
+    def load_move(self, move):
+        piece_name = move[0]
+        pos_to = move[2]
+
+        p = None
+        for piece in self.pieces:
+            if piece.piece_type == piece_name:
+                p = piece
+                break
+
+        self.move_piece(p, pos_to)
 
     def move_piece(self, piece_from, square_to):
         captured = None

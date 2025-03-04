@@ -134,7 +134,7 @@ def main():
     pos_path = "positions/"
 
     fen, moves_until_mate = parse_fen_with_mate(
-        pos_path + "position3.txt")
+        pos_path + "position1.txt")
 
     puzzle_positions, current_player = get_puzzle_positions(
         fen)
@@ -165,6 +165,7 @@ def main():
     running = True
     move_set = []
     duration_time = None
+    new_fen = None
 
     while running:
         for event in pygame.event.get():
@@ -226,13 +227,43 @@ def main():
                                 move_set.append((
                                     move[0].piece_type, move[0].position, move[1]))
         screen.fill((255, 255, 255))
+
         draw_board(board)
-        draw_pieces(board.pieces, screen)
         buttons = draw_buttons(screen)
         display_moves(screen, move_set, duration_time, board.winner)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                break
+        if not running:
+            break
+
+        ct = 0
+        if new_fen is not None:
+            board.load_fen(fen)
+            while board.generate_fen is not new_fen and ct < len(move_set):
+                board.load_move(move_set[ct])
+                screen.fill((255, 255, 255))
+                draw_board(board)
+                buttons = draw_buttons(screen)
+                draw_pieces(board.pieces, screen)
+                pygame.display.flip()
+                pygame.time.wait(800)
+                ct += 1
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                        break
+                if not running:
+                    break
+
+        else:
+            draw_pieces(board.pieces, screen)
         pygame.display.flip()
 
     pygame.quit()
+    sys.exit()
 
 
 if __name__ == "__main__":
