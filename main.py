@@ -72,51 +72,50 @@ def draw_pieces(pieces, screen):
 
 
 def draw_buttons(screen):
-    font = pygame.font.SysFont('Verdana', 20)
+    font = pygame.font.SysFont('Courier New', 24)
     button_x = Config.WINDOW_SIZE + Config.GAP * 2 + 50
 
-    dfs_button = pygame.Rect(button_x, Config.GAP, 150, 50)
-    bfs_button = pygame.Rect(button_x, Config.GAP + 70, 150, 50)
-    minimax_button = pygame.Rect(button_x, Config.GAP + 140, 150, 50)
-    alpha_beta_button = pygame.Rect(button_x, Config.GAP + 210, 150, 50)
-
-    buttons = [
-        (dfs_button, "DFS"),
-        (bfs_button, "BFS"),
-        (minimax_button, "Minimax"),
-        (alpha_beta_button, "Alpha-Beta")
-    ]
+    buttons = {
+        "DFS": pygame.Rect(button_x, Config.GAP, 150, 50),
+        "BFS": pygame.Rect(button_x, Config.GAP + 70, 150, 50),
+        "Minimax": pygame.Rect(button_x, Config.GAP + 140, 150, 50),
+        "Alpha-Beta": pygame.Rect(button_x, Config.GAP + 210, 150, 50)
+    }
 
     mouse_x, mouse_y = pygame.mouse.get_pos()
 
-    for button, text in buttons:
-        if button.collidepoint(mouse_x, mouse_y):
-            button_color = (150, 150, 150)
-        else:
-            button_color = (200, 200, 200)
+    for text, button in buttons.items():
+        hover = button.collidepoint(mouse_x, mouse_y)
 
-        pygame.draw.rect(screen, button_color, button)
+        base_color = (180, 180, 180)
+        hover_color = (220, 220, 220)
+        shadow_color = (100, 100, 100)
+
+        shadow_offset = 3
+        pygame.draw.rect(screen, shadow_color, button.move(
+            shadow_offset, shadow_offset), border_radius=10)
+
+        pygame.draw.rect(
+            screen, hover_color if hover else base_color, button, border_radius=10)
+
         button_text = font.render(text, True, (0, 0, 0))
-        screen.blit(button_text, (button.x + 25, button.y + 15))
+        text_rect = button_text.get_rect(center=button.center)
+        screen.blit(button_text, text_rect)
 
-    return {text: button for button, text in buttons}
+    return buttons
 
 
-def display_moves(screen, moves,  timer, winner=None):
-    font = pygame.font.SysFont('Verdana', 16)
+def display_moves(screen, moves, timer, winner=None):
+    font = pygame.font.SysFont('Courier New', 14)
     pos_x, pos_y, offset_y, offset_x = 700, 450, 60, 250
-    winner_text = f"{winner} won! Time taken: {timer}s."
+    winner_text = f"{winner} won! time taken: {timer}s."
     if winner:
-        screen.blit(font.render(winner_text, True, (0, 0, 0)),
-                    (700, 400))
+        screen.blit(font.render(winner_text, True, (0, 0, 0)), (700, 400))
     for i, move in enumerate(moves):
         move_text = f"{move[0]} {move[1]} -> {move[2]}"
-        if "white" in move[0]:
-            offset_x = 0
-        else:
-            offset_x = 250
+        offset_x = 0 if "white" in move[0] else 250
         screen.blit(font.render(move_text, True, (0, 0, 0)),
-                    (pos_x + offset_x, pos_y + i//2 * offset_y))
+                    (pos_x + offset_x, pos_y + i // 2 * offset_y))
 
 
 def parse_fen_with_mate(file):
