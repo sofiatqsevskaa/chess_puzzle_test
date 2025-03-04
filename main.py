@@ -52,8 +52,23 @@ def draw_board(board):
 
 
 def draw_pieces(pieces, screen):
+    path = "assets/"
+
     for piece in pieces:
-        piece.draw(screen)
+        image_path = f"{path}{piece.piece_type.replace(' ', '_')}.png"
+        piece_image = pygame.image.load(image_path)
+        piece_image = pygame.transform.smoothscale(
+            piece_image, (Config.PIECE_SIZE, Config.PIECE_SIZE))
+
+        row, col = piece.position
+        board_offset = (Config.WINDOW_SIZE + 2 * Config.GAP -
+                        8 * Config.TILE_SIZE) // 2
+        x = board_offset + col * Config.TILE_SIZE + \
+            (Config.TILE_SIZE - Config.PIECE_SIZE) // 2
+        y = board_offset + row * Config.TILE_SIZE + \
+            (Config.TILE_SIZE - Config.PIECE_SIZE) // 2
+
+        screen.blit(piece_image, (x, y))
 
 
 def draw_buttons(screen):
@@ -126,6 +141,17 @@ def main():
 
     screen = pygame.display.set_mode(
         (Config.WINDOW_SIZE + Config.GAP * 2 + 600, Config.WINDOW_SIZE + Config.GAP * 2))
+
+    font = pygame.font.SysFont('Courier', 40)
+    text = font.render("Loading...", True, (0, 0, 0))
+
+    text_rect = text.get_rect(
+        center=(Config.WINDOW_SIZE // 2, Config.WINDOW_SIZE // 2))
+
+    screen.fill((255, 255, 255))
+    screen.blit(text, text_rect)
+    pygame.display.flip()
+
     piece_images = load_piece_images()
     pieces = create_pieces(puzzle_positions, piece_images, screen)
     board = Chess_Board(screen, pieces, current_player)
